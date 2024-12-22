@@ -1,0 +1,87 @@
+$SiteURL = "https://m365x77052727.sharepoint.com/sites/Mystrey"
+$ClientID = "9c960a8b-7f55-4327-b52b-af542965dbd3"
+
+# Connect to SharePoint Online site
+Connect-PnPOnline -Url $SiteURL -Interactive -ClientId $ClientID
+
+
+# Define variables
+$libraryName = "Shared Documents"
+$fileUrl = "/sites/Mystrey/Shared Documents/2.xlsx"
+$startVersion = "0.1"
+$endVersion = "1.0"  # Ending version number
+
+# Get the file
+$file = Get-PnPFile -Url $fileUrl -AsListItem
+
+# Get versions of the file
+$versions = Get-PnPProperty -ClientObject $file -Property "Versions"
+
+# Check if versions are retrieved correctly
+if ($versions -eq $null) {
+    Write-Host "No versions found for the file."
+} else {
+    # Loop through versions and print their properties
+    foreach ($version in $versions) {
+        $versionNumber = $version.VersionLabel
+        Write-Host "Processing version $versionNumber"
+        Write-Host "Version properties: $($version | Format-List | Out-String)"
+
+        if ($versionNumber -ge $startVersion -and $versionNumber -le $endVersion) {
+            try {
+                Remove-PnPFileVersion -Url $fileUrl -Identity $version.VersionId -Force
+                Write-Host "Deleted version $versionNumber"
+            } catch {
+                Write-Host "Failed to delete version "
+            }
+        }
+    }
+}
+
+
+
+$SiteURL = "https://m365x77052727.sharepoint.com/sites/Mystrey"
+$ClientID = "9c960a8b-7f55-4327-b52b-af542965dbd3"
+
+# Connect to SharePoint Online site
+Connect-PnPOnline -Url $SiteURL -Interactive -ClientId $ClientID
+
+
+$FileRelativePath = "/sites/Mystrey/Shared Documents/2.xlsx"
+$VersionsToKeep = 1
+ 
+
+
+ 
+#Get File Versions
+$File = Get-PnPFile -Url $FileRelativePath
+$Versions = Get-PnPProperty -ClientObject $File -Property versions
+ 
+#Notification of file collected
+Write-host -f Yellow "Scanning File:"$File.Name
+$VersionsCount = $Versions.Count
+write-host -f Cyan "`t Total Number of Versions of the File:" $VersionsCount
+ 
+$VersionsToDelete = $VersionsCount - $VersionsToKeep
+If($VersionsToDelete -gt 0)
+{
+    write-host -f Cyan "`t Total Number of Versions to be deleted:" $VersionsToDelete
+    #Delete versions
+    For($i=0; $i -lt $VersionsToDelete; $i++)
+    {
+        If($Versions[$i].IsCurrentVersion)
+        {
+            $VersionsToDelete++
+            Continue
+        }
+        write-host -f Cyan "`t Deleting Version:" $Versions[$i].VersionLabel
+        Remove-PnPFileVersion -Url $FileRelativePath -Identity $Versions[$i].ID -Force
+     }
+     Write-Host -f Green "`t Version History is cleaned for the File:"$File.Name
+}
+
+
+
+
+Grant-PnPAzureADAppSitePermission -AppId d37bce7c-9b3e-4aa4-93f6-2e85014b0318 -DisplayName "That's mine" -Permissions FullControl -Site https://m365x77052727.sharepoint.com/sites/Mystrey
+ 
